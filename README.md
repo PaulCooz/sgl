@@ -1,1 +1,1 @@
-# sga
+# simple graphics layer
