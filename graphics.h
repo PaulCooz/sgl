@@ -2,12 +2,28 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <optional>
 
 class graphics
 {
+public:
+	graphics(std::vector<const char*> extensions);
+	void cleanup();
+
 private:
+	struct QueueFamilyIndices
+	{
+		std::optional<uint32_t> graphicsFamily;
+
+		bool isComplete()
+		{
+			return graphicsFamily.has_value();
+		}
+	};
+
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
+	VkPhysicalDevice physicalDevice;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -23,12 +39,15 @@ private:
 		const VkAllocationCallbacks* pAllocator
 	);
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void setupDebugMessenger();
 
 	bool checkValidationLayerSupport();
 
-public:
-	graphics(std::vector<const char*> extensions);
-	void cleanup();
+	bool isDeviceSuitable(VkPhysicalDevice device);
+
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
+	void createInstance(std::vector<const char*> extensions);
+	void setupDebugMessenger();
+	void pickPhysicalDevice();
 };
 

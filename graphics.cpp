@@ -126,7 +126,7 @@ bool graphics::checkValidationLayerSupport()
 	return true;
 }
 
-graphics::graphics(std::vector<const char*> extensions)
+void graphics::createInstance(std::vector<const char*> extensions)
 {
 	debug::assert(!enableValidationLayers || checkValidationLayerSupport(), "validation layers not available!");
 	if (enableValidationLayers)
@@ -172,8 +172,72 @@ graphics::graphics(std::vector<const char*> extensions)
 	}
 
 	debug::assert(vkCreateInstance(&createInfo, nullptr, &instance) == VK_SUCCESS, "failed to create instance!");
+}
 
+bool graphics::isDeviceSuitable(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices = findQueueFamilies(device);
+
+	VkPhysicalDeviceProperties deviceProperties;
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	bool typeDiscrete = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+	return typeDiscrete && indices.isComplete() && deviceFeatures.geometryShader;
+}
+
+void graphics::pickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+	debug::assert(deviceCount != 0, "failed to find GPUs!");
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+	for (const auto& device : devices)
+	{
+		if (isDeviceSuitable(device))
+		{
+			physicalDevice = device;
+			break;
+		}
+	}
+
+	debug::assert(physicalDevice != VK_NULL_HANDLE, "failed to find a suitable GPU!");
+}
+
+graphics::QueueFamilyIndices graphics::findQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies)
+	{
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = i;
+			break;
+		}
+
+		i++;
+	}
+
+	return indices;
+}
+
+graphics::graphics(std::vector<const char*> extensions)
+{
+	createInstance(extensions);
 	setupDebugMessenger();
+
+	physicalDevice = VK_NULL_HANDLE;
+	pickPhysicalDevice();
 }
 
 void graphics::cleanup()
