@@ -144,12 +144,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application.cpp" />
+    <ClCompile Include="bridge.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />
+    <ClInclude Include="bridge.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="graphics.h" />
   </ItemGroup>

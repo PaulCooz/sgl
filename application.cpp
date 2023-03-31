@@ -1,4 +1,5 @@
 #include "application.h"
+#include "bridge.h"
 
 #include <vector>
 
@@ -18,7 +19,8 @@ application::application()
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-	graphic = new graphics(extensions);
+	bridge* b = new bridge(window);
+	graphic = new graphics(extensions, b);
 }
 
 bool application::get_running()
