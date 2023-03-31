@@ -24,6 +24,8 @@ private:
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkPhysicalDevice physicalDevice;
+	VkDevice device;
+	VkQueue graphicsQueue;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -49,5 +51,6 @@ private:
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
 	void pickPhysicalDevice();
+	void createLogicalDevice();
 };
 
