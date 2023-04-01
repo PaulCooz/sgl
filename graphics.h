@@ -72,11 +72,14 @@ private:
 
 	void createImageViews();
 
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
 	void createSurface(bridge* bridge);
 	void pickPhysicalDevice();
 	void createLogicalDevice();
 	void createSwapChain(bridge* bridge);
+	void createGraphicsPipeline();
 };
 

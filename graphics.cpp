@@ -8,6 +8,7 @@
 #include <limits>
 #include <algorithm>
 
+#include <fstream>
 const std::vector<const char*> validationLayers =
 {
 	"VK_LAYER_KHRONOS_validation"
@@ -22,6 +23,21 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+static std::vector<char> readFile(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+	debug::assert(file.is_open(), "failed to open file!");
+
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer(fileSize);
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+	file.close();
+
+	return buffer;
+}
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback
 (
@@ -496,10 +512,52 @@ void graphics::createImageViews()
 	}
 }
 
+VkShaderModule graphics::createShaderModule(const std::vector<char>& code)
+{
+	VkShaderModuleCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = code.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+	VkShaderModule shaderModule;
+	debug::assert
+	(
+		vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) == VK_SUCCESS,
+		"failed to create shader module!"
+	);
+	return shaderModule;
+}
+
+void graphics::createGraphicsPipeline()
+{
+	auto vertShaderCode = readFile("shaders/vert.spv");
+	auto fragShaderCode = readFile("shaders/frag.spv");
+
+	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderStageInfo.module = vertShaderModule;
+	vertShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragShaderStageInfo.module = fragShaderModule;
+	fragShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+	vkDestroyShaderModule(device, fragShaderModule, nullptr);
+	vkDestroyShaderModule(device, vertShaderModule, nullptr);
+}
+
 graphics::graphics(std::vector<const char*> extensions, bridge* bridge)
 {
 	createInstance(extensions);
 	setupDebugMessenger();
+
 	createSurface(bridge);
 
 	physicalDevice = VK_NULL_HANDLE;
@@ -508,6 +566,8 @@ graphics::graphics(std::vector<const char*> extensions, bridge* bridge)
 
 	createSwapChain(bridge);
 	createImageViews();
+
+	createGraphicsPipeline();
 }
 
 void graphics::cleanup()
