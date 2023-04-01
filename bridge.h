@@ -10,6 +10,7 @@ class bridge
 public:
 	bridge(GLFWwindow* w);
 	void create_surface(VkInstance instance, VkSurfaceKHR& surface);
+	void getFramebufferSize(int* width, int* height);
 
 private:
 	GLFWwindow* window;

@@ -23,6 +23,12 @@ private:
 			return graphicsFamily.has_value() && presentFamily.has_value();
 		}
 	};
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities{};
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
@@ -31,6 +37,10 @@ private:
 	VkQueue graphicsQueue;
 	VkSurfaceKHR surface;
 	VkQueue presentQueue;
+	VkSwapchainKHR swapChain;
+	std::vector<VkImage> swapChainImages;
+	VkFormat swapChainImageFormat;
+	VkExtent2D swapChainExtent;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -50,13 +60,20 @@ private:
 	bool checkValidationLayerSupport();
 
 	bool isDeviceSuitable(VkPhysicalDevice device);
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitiesKHR& capabilities);
 
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
 	void createSurface(bridge* bridge);
 	void pickPhysicalDevice();
 	void createLogicalDevice();
+	void createSwapChain(bridge* bridge);
 };
 

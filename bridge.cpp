@@ -11,3 +11,8 @@ void bridge::create_surface(VkInstance instance, VkSurfaceKHR& surface)
 		"failed to create window surface!"
 	);
 }
+
+void bridge::getFramebufferSize(int* width, int* height)
+{
+	glfwGetFramebufferSize(window, width, height);
+}
