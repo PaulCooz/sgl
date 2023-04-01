@@ -41,6 +41,7 @@ private:
 	std::vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+	std::vector<VkImageView> swapChainImageViews;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -68,6 +69,8 @@ private:
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitiesKHR& capabilities);
+
+	void createImageViews();
 
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
