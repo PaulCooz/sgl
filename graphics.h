@@ -42,6 +42,8 @@ private:
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
 	std::vector<VkImageView> swapChainImageViews;
+	VkRenderPass renderPass;
+	VkPipelineLayout pipelineLayout;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -73,6 +75,8 @@ private:
 	void createImageViews();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
+
+	void createRenderPass();
 
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
