@@ -45,6 +45,9 @@ private:
 	VkRenderPass renderPass;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+	VkCommandPool commandPool;
+	VkCommandBuffer commandBuffer;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -74,10 +77,10 @@ private:
 	VkExtent2D chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitiesKHR& capabilities);
 
 	void createImageViews();
-
 	VkShaderModule createShaderModule(const std::vector<char>& code);
-
 	void createRenderPass();
+
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
@@ -86,5 +89,8 @@ private:
 	void createLogicalDevice();
 	void createSwapChain(bridge* bridge);
 	void createGraphicsPipeline();
+	void createFramebuffers();
+	void createCommandPool();
+	void createCommandBuffer();
 };
 
