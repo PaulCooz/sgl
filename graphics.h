@@ -10,6 +10,7 @@ class graphics
 {
 public:
 	graphics(std::vector<const char*> extensions, bridge* b);
+	void drawFrame();
 	void cleanup();
 
 private:
@@ -48,6 +49,10 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkCommandPool commandPool;
 	VkCommandBuffer commandBuffer;
+
+	VkSemaphore imageAvailableSemaphore;
+	VkSemaphore renderFinishedSemaphore;
+	VkFence inFlightFence;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -92,5 +97,6 @@ private:
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffer();
+	void createSyncObjects();
 };
 

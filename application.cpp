@@ -31,6 +31,7 @@ bool application::get_running()
 void application::update()
 {
 	glfwPollEvents();
+	graphic->drawFrame();
 }
 
 void application::cleanup()
