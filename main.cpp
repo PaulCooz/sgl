@@ -6,7 +6,7 @@ int main()
 {
 	application* app = new application();
 
-	while (app->get_running())
+	while (app->getRunning())
 	{
 		app->update();
 	}

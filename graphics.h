@@ -9,7 +9,9 @@
 class graphics
 {
 public:
-	graphics(std::vector<const char*> extensions, bridge* b);
+	bool framebufferResized = false;
+
+	graphics(std::vector<const char*> extensions, bridge& b);
 	void drawFrame();
 	void cleanup();
 
@@ -30,6 +32,8 @@ private:
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
+
+	bridge& appBridge;
 
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
@@ -67,34 +71,35 @@ private:
 		const VkAllocationCallbacks* pAllocator
 	);
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-
 	bool checkValidationLayerSupport();
 
 	bool isDeviceSuitable(VkPhysicalDevice device);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-	VkExtent2D chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitiesKHR& capabilities);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	void createImageViews();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	void createRenderPass();
 
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
-	void createSurface(bridge* bridge);
+	void createSurface();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
-	void createSwapChain(bridge* bridge);
+	void createSwapChain();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffer();
 	void createSyncObjects();
+
+	void recreateSwapChain();
+	void cleanupSwapChain();
 };

@@ -14,7 +14,7 @@ private:
 public:
 	application();
 
-	bool get_running();
+	bool getRunning();
 	void update();
 
 	void cleanup();

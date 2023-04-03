@@ -6,6 +6,12 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto graphic = reinterpret_cast<graphics*>(glfwGetWindowUserPointer(window));
+	graphic->framebufferResized = true;
+}
+
 application::application()
 {
 	glfwInit();
@@ -14,16 +20,20 @@ application::application()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	glfwSetWindowAttrib(window, GLFW_RESIZABLE, 1);
 
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 	bridge* b = new bridge(window);
-	graphic = new graphics(extensions, b);
+	graphic = new graphics(extensions, *b);
+
+	glfwSetWindowUserPointer(window, graphic);
+	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-bool application::get_running()
+bool application::getRunning()
 {
 	return !glfwWindowShouldClose(window);
 }

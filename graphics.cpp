@@ -268,7 +268,7 @@ VkPresentModeKHR graphics::chooseSwapPresentMode(const std::vector<VkPresentMode
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D graphics::chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitiesKHR& capabilities)
+VkExtent2D graphics::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
@@ -277,7 +277,7 @@ VkExtent2D graphics::chooseSwapExtent(bridge* bridge, const VkSurfaceCapabilitie
 	else
 	{
 		int width, height;
-		bridge->getFramebufferSize(&width, &height);
+		appBridge.getFramebufferSize(&width, &height);
 
 		VkExtent2D actualExtent =
 		{
@@ -424,18 +424,18 @@ void graphics::createLogicalDevice()
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void graphics::createSurface(bridge* bridge)
+void graphics::createSurface()
 {
-	bridge->create_surface(instance, surface);
+	appBridge.createSurface(instance, surface);
 }
 
-void graphics::createSwapChain(bridge* bridge)
+void graphics::createSwapChain()
 {
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
 	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-	VkExtent2D extent = chooseSwapExtent(bridge, swapChainSupport.capabilities);
+	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
 	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 	bool hasMaximum = swapChainSupport.capabilities.maxImageCount > 0;
@@ -766,6 +766,31 @@ void graphics::createSyncObjects()
 	}
 }
 
+void graphics::recreateSwapChain()
+{
+	appBridge.waitForFramebufferSize();
+	vkDeviceWaitIdle(device);
+
+	cleanupSwapChain();
+
+	createSwapChain();
+	createImageViews();
+	createFramebuffers();
+}
+
+void graphics::cleanupSwapChain()
+{
+	for (auto framebuffer : swapChainFramebuffers)
+	{
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
+	}
+	for (auto imageView : swapChainImageViews)
+	{
+		vkDestroyImageView(device, imageView, nullptr);
+	}
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
 void graphics::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
@@ -858,18 +883,18 @@ void graphics::createRenderPass()
 	renderPassInfo.pDependencies = &dependency;
 }
 
-graphics::graphics(std::vector<const char*> extensions, bridge* bridge)
+graphics::graphics(std::vector<const char*> extensions, bridge& bridge) : appBridge(bridge)
 {
 	createInstance(extensions);
 	setupDebugMessenger();
 
-	createSurface(bridge);
+	createSurface();
 
 	physicalDevice = VK_NULL_HANDLE;
 	pickPhysicalDevice();
 	createLogicalDevice();
 
-	createSwapChain(bridge);
+	createSwapChain();
 	createImageViews();
 	createRenderPass();
 	createGraphicsPipeline();
@@ -882,10 +907,22 @@ graphics::graphics(std::vector<const char*> extensions, bridge* bridge)
 void graphics::drawFrame()
 {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result =
+		vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		recreateSwapChain();
+		return;
+	}
+	else
+	{
+		debug::assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR, "failed to acquire swap chain image!");
+	}
+
+	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 	recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
@@ -923,7 +960,15 @@ void graphics::drawFrame()
 	presentInfo.pImageIndices = &imageIndex;
 	presentInfo.pResults = nullptr;
 
-	vkQueuePresentKHR(presentQueue, &presentInfo);
+	result = vkQueuePresentKHR(presentQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+	{
+		recreateSwapChain();
+	}
+	else
+	{
+		debug::assert(result == VK_SUCCESS, "failed to present swap chain image!");
+	}
 
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -931,6 +976,8 @@ void graphics::drawFrame()
 void graphics::cleanup()
 {
 	vkDeviceWaitIdle(device);
+
+	cleanupSwapChain();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -940,18 +987,11 @@ void graphics::cleanup()
 	}
 
 	vkDestroyCommandPool(device, commandPool, nullptr);
-	for (auto framebuffer : swapChainFramebuffers)
-	{
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-	}
+
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
-	for (auto imageView : swapChainImageViews)
-	{
-		vkDestroyImageView(device, imageView, nullptr);
-	}
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
+
 	vkDestroyDevice(device, nullptr);
 
 	if (enableValidationLayers)
