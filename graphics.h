@@ -56,6 +56,8 @@ private:
 	std::vector<VkSemaphore> imageAvailableSemaphores;
 	std::vector<VkSemaphore> renderFinishedSemaphores;
 	std::vector<VkFence> inFlightFences;
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -98,8 +100,10 @@ private:
 	void createFramebuffers();
 	void createCommandPool();
 	void createCommandBuffer();
+	void createVertexBuffer();
 	void createSyncObjects();
 
 	void recreateSwapChain();
 	void cleanupSwapChain();
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
