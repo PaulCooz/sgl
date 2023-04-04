@@ -89,6 +89,14 @@ private:
 	void createImageViews();
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	void createRenderPass();
+	void createBuffer
+	(
+		VkDeviceSize size,
+		VkBufferUsageFlags usage,
+		VkMemoryPropertyFlags properties,
+		VkBuffer& buffer,
+		VkDeviceMemory& bufferMemory
+	);
 
 	void createInstance(std::vector<const char*> extensions);
 	void setupDebugMessenger();
@@ -106,4 +114,5 @@ private:
 	void recreateSwapChain();
 	void cleanupSwapChain();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 };
