@@ -58,6 +58,8 @@ private:
 	std::vector<VkFence> inFlightFences;
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
 
 	VkResult CreateDebugUtilsMessengerEXT
 	(
@@ -109,6 +111,7 @@ private:
 	void createCommandPool();
 	void createCommandBuffer();
 	void createVertexBuffer();
+	void createIndexBuffer();
 	void createSyncObjects();
 
 	void recreateSwapChain();
